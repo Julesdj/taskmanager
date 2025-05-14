@@ -1,4 +1,57 @@
-.env
+# Python 
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual Environments
 .venv/
-__pycache__
+venv/
+ENV/
+env/
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS Files
 .DS_Store
+Thumbs.db
+
+# Environment Variables
+.env
+
+# Alembic
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
+
+# Databases (local files)
+*.sqlite3
+
+# Logs
+*.log
+
+# Uvicorn reload cache
+.reload/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Pytest cache
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# Pydantic compiled schemas (if using compiled mode)
+pydantic_schema_cache/
+
+# Docker-related
+**/docker-compose.override.yml
