@@ -1,7 +1,6 @@
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.task import Task
+from app.repositories.task_repository import TaskRepository
 
 
 class TaskService:
@@ -9,5 +8,6 @@ class TaskService:
         self.db = db
 
     async def get_all_tasks(self):
-        result = await self.db.execute(select(Task))
-        return result.scalars().all()
+        repository = TaskRepository(self.db)  # Clean separation of data access logic
+        result = await repository.get_all_tasks()
+        return result
