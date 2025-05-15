@@ -19,9 +19,11 @@ router = APIRouter()
 
 
 @router.get("/tasks", response_model=List[TaskResponseSchema])
-async def list_tasks(db: AsyncSession = Depends(get_db)):
+async def list_tasks(
+    db: AsyncSession = Depends(get_db), limit: int = 10, offset: int = 0
+):
     service = TaskService(db)  # Keeps business logic organized & testable
-    tasks = await service.get_all_tasks()
+    tasks = await service.get_all_tasks(limit=limit, offset=offset)
     return tasks
 
 
