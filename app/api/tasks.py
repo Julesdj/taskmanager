@@ -13,13 +13,16 @@ from app.schemas.task_schema import (
     TaskResponseSchema,
     UpdateTaskSchema,
 )
+from app.services.task_service import TaskService
 
 router = APIRouter()
 
 
 @router.get("/tasks", response_model=List[TaskResponseSchema])
 async def list_tasks(db: AsyncSession = Depends(get_db)):
-    return await crud.get_tasks(db)
+    service = TaskService(db)  # Abstracting business logic
+    tasks = await service.get_all_tasks()
+    return tasks
 
 
 @router.post("/tasks", response_model=TaskResponseSchema)
