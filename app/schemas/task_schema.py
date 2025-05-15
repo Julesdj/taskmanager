@@ -1,17 +1,17 @@
-from datetime import datetime  # noqa
+from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
-# Shared config base for all schemas
+# Shared base for all schemas
 class TaskBaseSchema(BaseModel):
     title: str
     description: Optional[str] = None
     is_completed: bool = False
 
-    class Config:
-        orm_mode = True  # Allows SQLAlchemy models to be passed directly
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CreateTaskSchema(TaskBaseSchema):
@@ -23,11 +23,12 @@ class UpdateTaskSchema(BaseModel):
     description: Optional[str] = None
     is_completed: Optional[bool] = None
 
-    class Config:
-        orm_model = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TaskResponseSchema(TaskBaseSchema):
-    id: int
+    id: UUID
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
