@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,10 +20,16 @@ router = APIRouter()
 
 @router.get("/tasks", response_model=List[TaskResponseSchema])
 async def list_tasks(
-    db: AsyncSession = Depends(get_db), limit: int = 10, offset: int = 0
+    db: AsyncSession = Depends(get_db),
+    limit: int = 10,
+    offset: int = 0,
+    status: Optional[bool] = None,
+    search: Optional[str] = None,
 ):
     service = TaskService(db)  # Keeps business logic organized & testable
-    tasks = await service.get_all_tasks(limit=limit, offset=offset)
+    tasks = await service.get_all_tasks(
+        limit=limit, offset=offset, status=status, search=search
+    )
     return tasks
 
 
