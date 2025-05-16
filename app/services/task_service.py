@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.task_repository import TaskRepository
+from app.schemas.task_schema import CreateTaskSchema
 
 
 class TaskService:
@@ -21,3 +22,6 @@ class TaskService:
             limit=limit, offset=offset, status=status, search=search
         )
         return result
+
+    async def create_task(self, data: CreateTaskSchema):
+        return await TaskRepository(self.db).create_task(data)

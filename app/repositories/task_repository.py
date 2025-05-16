@@ -4,6 +4,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.task import Task
+from app.schemas.task_schema import CreateTaskSchema
 
 
 class TaskRepository:
@@ -39,3 +40,10 @@ class TaskRepository:
 
         result = await self.db.execute(stmt)
         return result.scalars().all()
+
+    async def create_task(self, task_in: CreateTaskSchema):
+        task = Task(**task_in.model_dump())
+        self.db.add(task)
+        await self.db.commit()
+        await self.db.refresh(task)
+        return task

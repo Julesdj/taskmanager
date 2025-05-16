@@ -34,10 +34,10 @@ async def list_tasks(
 
 
 @router.post("/tasks", response_model=TaskResponseSchema)
-async def create_task_route(
-    task_in: CreateTaskSchema, db: AsyncSession = Depends(get_db)
-):
-    return await crud.create_task(db, task_in)
+async def create_task(task_in: CreateTaskSchema, db: AsyncSession = Depends(get_db)):
+    service = TaskService(db)
+    task = await service.create_task(data=task_in)
+    return task
 
 
 @router.patch("/tasks/{task_id}", response_model=TaskResponseSchema)
