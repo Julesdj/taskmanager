@@ -17,10 +17,17 @@ class TaskService:
         offset: int = 0,
         status: Optional[bool] = None,
         search: Optional[str] = None,
+        order_by: str = "created_at",
+        order: str = "desc",
     ):
         repository = TaskRepository(self.db)  # Clean separation of data access logic
         result = await repository.get_tasks(
-            limit=limit, offset=offset, status=status, search=search
+            limit=limit,
+            offset=offset,
+            status=status,
+            search=search,
+            order_by=order_by,
+            order=order,
         )
         return result
 

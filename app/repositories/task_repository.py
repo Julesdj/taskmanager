@@ -2,11 +2,17 @@ from typing import Optional, Sequence
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import or_, select
+from sqlalchemy import asc, desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.task import Task
 from app.schemas.task_schema import CreateTaskSchema, UpdateTaskSchema
+
+ORDERABLE_FIELDS = {
+    "created_at": Task.created_at,
+    "updated_at": Task.updated_at,
+    "title": Task.title,
+}
 
 
 class TaskRepository:
@@ -19,6 +25,8 @@ class TaskRepository:
         offset: int = 0,
         status: Optional[bool] = None,
         search: Optional[str] = None,
+        order_by: str = "created_at",
+        order: str = "desc",
     ) -> Sequence[Task]:
         """Fetch all tasks from the database with pagination."""
         stmt = select(Task)
@@ -37,6 +45,14 @@ class TaskRepository:
 
         if filters:
             stmt = stmt.where(*filters)
+
+        # ⬅️ Apply ordering
+        if order_by in ORDERABLE_FIELDS:
+            column = ORDERABLE_FIELDS[order_by]
+            if order.lower() == "asc":
+                stmt = stmt.order_by(asc(column))
+            else:
+                stmt = stmt.order_by(desc(column))
 
         stmt = stmt.limit(limit).offset(offset)
 

@@ -24,10 +24,17 @@ async def list_tasks(
     offset: int = 0,
     status: Optional[bool] = None,
     search: Optional[str] = None,
+    order_by: str = "created_at",
+    order: str = "desc",
 ):
     service = TaskService(db)  # Keeps business logic organized & testable
     tasks = await service.get_all_tasks(
-        limit=limit, offset=offset, status=status, search=search
+        limit=limit,
+        offset=offset,
+        status=status,
+        search=search,
+        order_by=order_by,
+        order=order,
     )
     return tasks
 
