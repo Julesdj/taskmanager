@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.db.session import engine  # Async engine
 from app.models.base import Base
 from app.models.task import Task  # noqa
+from app.models.user import User  # noqa
 
 # Add app to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
