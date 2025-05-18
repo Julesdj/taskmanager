@@ -1,10 +1,12 @@
 from typing import Optional, Sequence
+from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.task import Task
-from app.schemas.task_schema import CreateTaskSchema
+from app.schemas.task_schema import CreateTaskSchema, UpdateTaskSchema
 
 
 class TaskRepository:
@@ -47,3 +49,27 @@ class TaskRepository:
         await self.db.commit()
         await self.db.refresh(task)
         return task
+
+    async def update_task(self, task_id: UUID, task_in: UpdateTaskSchema):
+        result = await self.db.execute(select(Task).where(Task.id == task_id))
+        task = result.scalars().first()
+
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+
+        for field, value in task_in.model_dump(exclude_unset=True).items():
+            setattr(task, field, value)
+
+        await self.db.commit()
+        await self.db.refresh(task)
+        return task
+
+    async def delete_task(self, task_id: UUID):
+        result = await self.db.execute(select(Task).where(Task.id == task_id))
+        task = result.scalars().first()
+
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+
+        await self.db.delete(task)
+        await self.db.commit()

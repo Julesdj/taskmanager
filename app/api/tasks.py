@@ -1,13 +1,10 @@
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud import tasks as crud
 from app.db.deps import get_db  # To be fixed
-from app.models.task import Task
 from app.schemas.task_schema import (
     CreateTaskSchema,
     TaskResponseSchema,
@@ -18,7 +15,9 @@ from app.services.task_service import TaskService
 router = APIRouter()
 
 
-@router.get("/tasks", response_model=List[TaskResponseSchema])
+@router.get(
+    "/tasks", response_model=List[TaskResponseSchema], status_code=status.HTTP_200_OK
+)
 async def list_tasks(
     db: AsyncSession = Depends(get_db),
     limit: int = 10,
@@ -33,29 +32,34 @@ async def list_tasks(
     return tasks
 
 
-@router.post("/tasks", response_model=TaskResponseSchema)
+@router.post(
+    "/tasks", response_model=TaskResponseSchema, status_code=status.HTTP_201_CREATED
+)
 async def create_task(task_in: CreateTaskSchema, db: AsyncSession = Depends(get_db)):
     service = TaskService(db)
     task = await service.create_task(data=task_in)
     return task
 
 
-@router.patch("/tasks/{task_id}", response_model=TaskResponseSchema)
+@router.patch(
+    "/tasks/{task_id}",
+    response_model=TaskResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
 async def update_task(
-    task_id: UUID, task_in: UpdateTaskSchema, db: AsyncSession = Depends(get_db)
+    task_in: UpdateTaskSchema,
+    task_id: UUID,
+    db: AsyncSession = Depends(
+        get_db,
+    ),
 ):
-    result = await db.execute(select(Task).where(Task.id == task_id))
-    task = result.scalars().first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return await crud.update_task(db, task, task_in)
+    service = TaskService(db)
+    task = await service.update_task(task_id, data=task_in)
+    return task
 
 
-@router.delete("/tasks/{task_id}")
+@router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(task_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Task).where(Task.id == task_id))
-    task = result.scalars().first()
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    await crud.delete_task(db, task)
+    service = TaskService(db)
+    await service.delete_task(task_id)
     return {"detail": "Task deleted"}
