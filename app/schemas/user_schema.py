@@ -11,7 +11,7 @@ class UserBaseSchema(BaseModel):
 
 
 class CreateUserSchema(UserBaseSchema):
-    hashed_password: str = Field(..., max_length=255)
+    hashed_password: str = Field(..., max_length=1000)
 
 
 class UserResponseSchema(UserBaseSchema):

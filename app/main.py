@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api import tasks
+from app.api import tasks, users
 from app.db.deps import get_db
 
 
@@ -15,6 +15,7 @@ def create_app() -> FastAPI:
         return {"db_status": "ok" if result.scalar() == 1 else "fail"}
 
     app.include_router(tasks.router)
+    app.include_router(users.router)
     return app
 
 
