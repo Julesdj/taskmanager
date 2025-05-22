@@ -10,6 +10,7 @@ from app.schemas.task_schema import CreateTaskSchema, UpdateTaskSchema
 class TaskService:
     def __init__(self, db: AsyncSession):
         self.db = db
+        self.repository = TaskRepository(self.db)
 
     async def get_all_tasks(
         self,
@@ -20,8 +21,7 @@ class TaskService:
         order_by: str = "created_at",
         order: str = "desc",
     ):
-        repository = TaskRepository(self.db)  # Clean separation of data access logic
-        result = await repository.get_tasks(
+        result = await self.repository.get_tasks(
             limit=limit,
             offset=offset,
             status=status,
@@ -32,12 +32,10 @@ class TaskService:
         return result
 
     async def create_task(self, data: CreateTaskSchema):
-        return await TaskRepository(self.db).create_task(data)
+        return await self.repository.create_task(data)
 
     async def update_task(self, task_id: UUID, data: UpdateTaskSchema):
-        repository = TaskRepository(self.db)
-        return await repository.update_task(task_id, data)
+        return await self.repository.update_task(task_id, data)
 
     async def delete_task(self, task_id: UUID):
-        repository = TaskRepository(self.db)
-        await repository.delete_task(task_id)
+        await self.repository.delete_task(task_id)
