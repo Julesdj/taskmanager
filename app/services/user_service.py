@@ -21,12 +21,11 @@ class UserService:
                 detail="Email already registered.",
             )
 
-        hashed_pwd = hash_password(user_in.hashed_password)
-        user_data = user_in.model_copy(
-            update={"hashed_password": hashed_pwd}, deep=True
-        )
+        hashed_pwd = hash_password(user_in.password)
+        user_dict = user_in.model_dump(exclude={"password"})
+        user_dict["hashed_password"] = hashed_pwd
 
-        return await self.repository.create_user(user_data)
+        return await self.repository.create_user(user_dict)
 
     async def authenticate_user(self, email: str, password: str) -> User:
         user = await self.repository.get_by_email(email)
