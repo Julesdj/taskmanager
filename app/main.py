@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api import tasks, users
+from app.api import auth, tasks, users
 from app.db.deps import get_db
 
 
@@ -16,6 +16,7 @@ def create_app() -> FastAPI:
 
     app.include_router(tasks.router)
     app.include_router(users.router)
+    app.include_router(auth.router)
     return app
 
 
