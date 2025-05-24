@@ -9,6 +9,7 @@ from alembic import context
 from app.core.config import settings
 from app.db.session import engine  # Async engine
 from app.models.base import Base
+from app.models.refresh_token import RefreshToken  # noqa
 from app.models.task import Task  # noqa
 from app.models.user import User  # noqa
 
