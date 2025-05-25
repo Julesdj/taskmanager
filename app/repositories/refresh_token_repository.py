@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
+from typing import Sequence
 
-from sqlalchemy import select, update
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.refresh_token import RefreshToken
@@ -37,3 +38,15 @@ class RefreshTokenRepository:
             )
         )
         await self.db.commit()
+
+    async def get_active_sessions_for_user(
+        self, user_id: str
+    ) -> Sequence[RefreshToken]:
+        result = await self.db.execute(
+            select(RefreshToken)
+            .where(
+                and_(RefreshToken.user_id == user_id, RefreshToken.revoked.is_(False))
+            )
+            .order_by(RefreshToken.created_at.desc())
+        )
+        return result.scalars().all()

@@ -1,7 +1,6 @@
 from datetime import datetime
-from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import UUID4, BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserBaseSchema(BaseModel):
@@ -15,7 +14,7 @@ class CreateUserSchema(UserBaseSchema):
 
 
 class UserResponseSchema(UserBaseSchema):
-    id: UUID
+    id: UUID4
     is_active: bool
     created_at: datetime
     updated_at: datetime

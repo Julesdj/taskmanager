@@ -15,7 +15,9 @@ class AuthService:
         self.db = db
         self.refresh_repo = RefreshTokenRepository(db)
 
-    async def generate_tokens(self, user_id: str) -> dict:
+    async def generate_tokens(
+        self, user_id: str, user_agent: str | None = None, ip_address: str | None = None
+    ) -> dict:
         access_token = security.create_access_token({"sub": user_id})
 
         refresh_lifetime = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
@@ -25,8 +27,10 @@ class AuthService:
             user_id=user_id,
             jti=refresh_data["jti"],
             expires_at=refresh_data["exp"],
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
-        # Save the refresh token in DB (optional but recommended for revocation/rotation)
+        # Save the refresh token in DB
         await self.refresh_repo.save_token(refresh_token)
 
         return {
@@ -54,3 +58,6 @@ class AuthService:
 
     async def logout(self, user_id: str) -> None:
         await self.refresh_repo.revoke_all_tokens_for_user(user_id)
+
+    async def list_sessions(self, user_id: str):
+        return await self.refresh_repo.get_active_sessions_for_user(user_id)
