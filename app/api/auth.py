@@ -1,19 +1,30 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Body, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import create_access_token
 from app.db.deps import get_db
 from app.schemas.auth_schema import LoginSchema, TokenSchema
+from app.services.auth_service import AuthService  # NEW
 from app.services.user_service import UserService
 
 router = APIRouter()
 
 
 @router.post("/auth/login", response_model=TokenSchema, status_code=status.HTTP_200_OK)
-async def Login(data: LoginSchema, db: AsyncSession = Depends(get_db)):
-    service = UserService(db)
-    user = await service.authenticate_user(data.email, data.password)
+async def login(data: LoginSchema, db: AsyncSession = Depends(get_db)):
+    user_service = UserService(db)
+    auth_service = AuthService(db)
 
-    access_token = create_access_token({"sub": str(user.id)})
+    user = await user_service.authenticate_user(data.email, data.password)
 
-    return TokenSchema(access_token=access_token, token_type="bearer")
+    tokens = await auth_service.generate_tokens(user_id=str(user.id))
+
+    return TokenSchema(**tokens)  # includes access_token, refresh_token, token_type
+
+
+@router.post("/auth/refresh", response_model=TokenSchema)
+async def refresh_token(
+    refresh_token: str = Body(..., embed=True), db: AsyncSession = Depends(get_db)
+):
+    auth_service = AuthService(db)
+    tokens = await auth_service.verify_and_rotate_refresh_token(refresh_token)
+    return TokenSchema(**tokens)

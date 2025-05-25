@@ -17,13 +17,16 @@ class RefreshToken(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
-    jti: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    jti: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
+        DateTime(timezone=True), nullable=False, index=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     user = relationship("User", backref="refresh_tokens")
