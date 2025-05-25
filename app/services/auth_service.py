@@ -51,3 +51,6 @@ class AuthService:
 
         # Issue new tokens
         return await self.generate_tokens(user_id)
+
+    async def logout(self, user_id: str) -> None:
+        await self.refresh_repo.revoke_all_tokens_for_user(user_id)
