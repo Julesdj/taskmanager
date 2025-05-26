@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Sequence
 
 from sqlalchemy import and_, select, update
@@ -21,31 +21,35 @@ class RefreshTokenRepository:
         self.db.add(token)
         await self.db.commit()
 
-    async def revoke_token(self, jti: str):
+    async def revoke_token(self, jti: str, now: datetime):
         token = await self.get_by_jti(jti)
         if token and not token.revoked:
             token.revoked = True
-            token.revoked_at = datetime.now(timezone.utc)
+            token.revoked_at = now
             await self.db.commit()
 
-    async def revoke_all_tokens_for_user(self, user_id: str):
+    async def revoke_all_tokens_for_user(self, user_id: str, now: datetime):
         await self.db.execute(
             update(RefreshToken)
             .where(RefreshToken.user_id == user_id, RefreshToken.revoked.is_(False))
             .values(
                 revoked=True,
-                revoked_at=datetime.now(timezone.utc),
+                revoked_at=now,
             )
         )
         await self.db.commit()
 
     async def get_active_sessions_for_user(
-        self, user_id: str
+        self, user_id: str, now: datetime
     ) -> Sequence[RefreshToken]:
         result = await self.db.execute(
             select(RefreshToken)
             .where(
-                and_(RefreshToken.user_id == user_id, RefreshToken.revoked.is_(False))
+                and_(
+                    RefreshToken.user_id == user_id,
+                    RefreshToken.revoked.is_(False),
+                    RefreshToken.expires_at > now,
+                )
             )
             .order_by(RefreshToken.created_at.desc())
         )

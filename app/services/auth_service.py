@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +40,8 @@ class AuthService:
         }
 
     async def verify_and_rotate_refresh_token(self, token: str) -> dict:
+        now = datetime.now(timezone.utc)
+
         payload = security.decode_refresh_token(token)
         jti = payload["jti"]
         user_id = payload["sub"]
@@ -51,13 +53,15 @@ class AuthService:
             )
 
         # Revoke old token
-        await self.refresh_repo.revoke_token(jti)
+        await self.refresh_repo.revoke_token(jti, now)
 
         # Issue new tokens
         return await self.generate_tokens(user_id)
 
     async def logout(self, user_id: str) -> None:
-        await self.refresh_repo.revoke_all_tokens_for_user(user_id)
+        now = datetime.now(timezone.utc)
+        await self.refresh_repo.revoke_all_tokens_for_user(user_id, now)
 
     async def list_sessions(self, user_id: str):
-        return await self.refresh_repo.get_active_sessions_for_user(user_id)
+        now = datetime.now(timezone.utc)
+        return await self.refresh_repo.get_active_sessions_for_user(user_id, now)
