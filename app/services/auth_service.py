@@ -63,7 +63,7 @@ class AuthService:
         user_id = payload["sub"]
         session_id = payload["sid"]
 
-        token_obj = await self.refresh_repo.get_by_jti(jti)
+        token_obj = await self.refresh_repo.get_by_jti_for_update(jti)
         if not token_obj or token_obj.revoked or token_obj.expires_at < now:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"

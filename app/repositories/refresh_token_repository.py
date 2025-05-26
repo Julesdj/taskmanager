@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Sequence
 
-from sqlalchemy import and_, select, update
+from sqlalchemy import and_, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.refresh_token import RefreshToken
@@ -17,8 +17,22 @@ class RefreshTokenRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_jti_for_update(self, jti: str) -> RefreshToken | None:
+        result = await self.db.execute(
+            select(RefreshToken).where(RefreshToken.jti == jti).with_for_update()
+        )
+        return result.scalar_one_or_none()
+
     async def save_token(self, token: RefreshToken):
         self.db.add(token)
+        await self.db.commit()
+
+    async def update_token_metadata(self, jti: str, ip: str, user_agent: str):
+        await self.db.execute(
+            update(RefreshToken)
+            .where(RefreshToken.jti == jti)
+            .values(ip_address=ip, user_agent=user_agent)
+        )
         await self.db.commit()
 
     async def revoke_token(self, jti: str, now: datetime):
@@ -54,3 +68,14 @@ class RefreshTokenRepository:
             .order_by(RefreshToken.created_at.desc())
         )
         return result.scalars().all()
+
+    # method to clean up expired + revoked tokens to keep the DB lean
+    # Run this periodically via a background task or cron job.
+    async def delete_expired_and_revoked(self, now: datetime):
+        await self.db.execute(
+            delete(RefreshToken).where(
+                RefreshToken.revoked.is_(True),
+                RefreshToken.expires_at < now,
+            )
+        )
+        await self.db.commit()
