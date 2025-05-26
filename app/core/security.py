@@ -10,7 +10,6 @@ from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
 # ----------------------
 # Password Utilities
 # ----------------------
@@ -38,10 +37,12 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
-def create_refresh_token(user_id: str, expires_delta: timedelta) -> dict:
+def create_refresh_token(
+    user_id: str, expires_delta: timedelta, session_id: str
+) -> dict:
     jti = str(uuid.uuid4())
     exp = datetime.now(timezone.utc) + expires_delta
-    payload = {"sub": user_id, "jti": jti, "exp": exp}
+    payload = {"sub": user_id, "jti": jti, "sid": session_id, "exp": exp}
     token = jwt.encode(
         payload, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM
     )
@@ -64,10 +65,10 @@ def decode_access_token(token: str) -> Dict[str, Any]:
             detail="Could not validate credentials",
         )
 
-    if "sub" not in payload:
+    if "sub" not in payload or "sid" not in payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token payload missing 'sub' claim",
+            detail="Access token missing claims",
         )
 
     return payload
@@ -84,7 +85,7 @@ def decode_refresh_token(token: str) -> dict:
             detail="Invalid or expired token",
         )
 
-    if "sub" not in payload or "jti" not in payload:
+    if "sub" not in payload or "jti" not in payload or "sid" not in payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token missing claims",

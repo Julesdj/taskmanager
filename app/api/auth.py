@@ -22,7 +22,7 @@ async def login(
     user = await user_service.authenticate_user(data.email, data.password)
 
     ip_address = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user agent")
+    user_agent = request.headers.get("user-agent")
 
     tokens = await auth_service.generate_tokens(
         user_id=str(user.id), ip_address=ip_address, user_agent=user_agent
@@ -33,10 +33,17 @@ async def login(
 
 @router.post("/auth/refresh", response_model=TokenSchema)
 async def refresh_token(
-    refresh_token: str = Body(..., embed=True), db: AsyncSession = Depends(get_db)
+    request: Request,
+    refresh_token: str = Body(..., embed=True),
+    db: AsyncSession = Depends(get_db),
 ):
     auth_service = AuthService(db)
-    tokens = await auth_service.verify_and_rotate_refresh_token(refresh_token)
+    ip_address = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent")
+
+    tokens = await auth_service.verify_and_rotate_refresh_token(
+        refresh_token, ip_address=ip_address, user_agent=user_agent
+    )
     return TokenSchema(**tokens)
 
 

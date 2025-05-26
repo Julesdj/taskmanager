@@ -30,5 +30,6 @@ class RefreshToken(Base):
     )
     ip_address: Mapped[str | None] = mapped_column(String, nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String, nullable=True)
+    session_id: Mapped[str | None] = mapped_column(String, index=True)
 
     user = relationship("User", backref="refresh_tokens")
